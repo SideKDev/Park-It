@@ -1,0 +1,30 @@
+# Park-IT Backend Dependencies
+
+# Web Framework
+fastapi==0.109.2
+uvicorn[standard]==0.27.1
+
+# Database
+sqlalchemy==2.0.25
+psycopg2-binary==2.9.9  # PostgreSQL driver
+
+# Authentication
+pyjwt==2.8.0
+cryptography==42.0.2
+
+# HTTP Client (for OAuth verification)
+httpx==0.26.0
+
+# Environment & Config
+python-dotenv==1.0.1
+
+# Validation
+pydantic==2.6.1
+email-validator==2.1.0
+
+# Development
+python-multipart==0.0.9  # For form data
+
+# Optional: Push Notifications
+# firebase-admin==6.4.0  # For FCM
+# apns2==0.7.2  # For APNs

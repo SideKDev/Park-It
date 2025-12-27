@@ -1,0 +1,93 @@
+{
+  "expo": {
+    "name": "Park-IT",
+    "slug": "park-it",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "parkit",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#4A7FC1"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.sidekickstudios.parkit",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Park-IT needs your location to identify parking rules and regulations for your current spot.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Park-IT needs background location access to automatically detect when you park and alert you before violations.",
+        "NSLocationAlwaysUsageDescription": "Park-IT needs background location access to automatically detect when you park and alert you before violations.",
+        "NSMotionUsageDescription": "Park-IT uses motion data to detect when you've parked your car.",
+        "NSBluetoothAlwaysUsageDescription": "Park-IT can connect to your car's Bluetooth to automatically detect when you park.",
+        "NSBluetoothPeripheralUsageDescription": "Park-IT can connect to your car's Bluetooth to automatically detect when you park.",
+        "UIBackgroundModes": [
+          "location",
+          "fetch",
+          "remote-notification"
+        ]
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#4A7FC1"
+      },
+      "package": "com.sidekickstudios.parkit",
+      "versionCode": 1,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "ACTIVITY_RECOGNITION",
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "BLUETOOTH_CONNECT",
+        "BLUETOOTH_SCAN",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Park-IT needs background location access to automatically detect when you park and alert you before violations.",
+          "locationAlwaysPermission": "Park-IT needs background location access to automatically detect when you park and alert you before violations.",
+          "locationWhenInUsePermission": "Park-IT needs your location to identify parking rules and regulations for your current spot.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#4A7FC1"
+        }
+      ],
+      "expo-apple-authentication"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "your-project-id-here"
+      }
+    }
+  }
+}

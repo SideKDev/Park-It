@@ -1,0 +1,83 @@
+{
+  "description": "NYC Parking Meter Zones (Simplified)",
+  "note": "This is sample data. In production, use official NYC DOT/ParkMobile data.",
+  "defaultRate": 3.50,
+  "defaultMaxMinutes": 120,
+  "activeHours": {
+    "weekday": {
+      "start": "07:00",
+      "end": "19:00"
+    },
+    "saturday": {
+      "start": "07:00",
+      "end": "19:00"
+    },
+    "sunday": null
+  },
+  "zones": [
+    {
+      "zoneCode": "1001",
+      "name": "Midtown East",
+      "borough": "Manhattan",
+      "rate": 4.00,
+      "maxMinutes": 60,
+      "bounds": {
+        "north": 40.7600,
+        "south": 40.7500,
+        "east": -73.9700,
+        "west": -73.9800
+      }
+    },
+    {
+      "zoneCode": "1002",
+      "name": "Midtown West",
+      "borough": "Manhattan",
+      "rate": 4.00,
+      "maxMinutes": 60,
+      "bounds": {
+        "north": 40.7600,
+        "south": 40.7500,
+        "east": -73.9800,
+        "west": -73.9950
+      }
+    },
+    {
+      "zoneCode": "2001",
+      "name": "Downtown Brooklyn",
+      "borough": "Brooklyn",
+      "rate": 2.50,
+      "maxMinutes": 120,
+      "bounds": {
+        "north": 40.6950,
+        "south": 40.6850,
+        "east": -73.9800,
+        "west": -73.9950
+      }
+    },
+    {
+      "zoneCode": "3001",
+      "name": "Long Island City",
+      "borough": "Queens",
+      "rate": 2.00,
+      "maxMinutes": 120,
+      "bounds": {
+        "north": 40.7500,
+        "south": 40.7400,
+        "east": -73.9350,
+        "west": -73.9500
+      }
+    }
+  ],
+  "paymentMethods": [
+    {
+      "name": "ParkMobile",
+      "urlScheme": "parkmobile://",
+      "webUrl": "https://parkmobile.io"
+    },
+    {
+      "name": "PayByPhone",
+      "urlScheme": "paybyphone://",
+      "webUrl": "https://paybyphone.com"
+    }
+  ]
+}

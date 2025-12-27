@@ -1,0 +1,62 @@
+{
+  "description": "NYC Alternate Side Parking - Street Cleaning Schedule (Simplified)",
+  "note": "This is sample data. In production, use official NYC DOT data.",
+  "schedules": [
+    {
+      "borough": "Manhattan",
+      "rules": [
+        {
+          "days": [0, 3],
+          "startTime": "08:30",
+          "endTime": "10:00",
+          "side": "North/East"
+        },
+        {
+          "days": [1, 4],
+          "startTime": "11:00",
+          "endTime": "12:30",
+          "side": "South/West"
+        }
+      ]
+    },
+    {
+      "borough": "Brooklyn",
+      "rules": [
+        {
+          "days": [1, 4],
+          "startTime": "08:30",
+          "endTime": "10:00",
+          "side": "North/East"
+        },
+        {
+          "days": [2, 5],
+          "startTime": "11:00",
+          "endTime": "12:30",
+          "side": "South/West"
+        }
+      ]
+    },
+    {
+      "borough": "Queens",
+      "rules": [
+        {
+          "days": [0, 3],
+          "startTime": "09:00",
+          "endTime": "10:30",
+          "side": "North/East"
+        },
+        {
+          "days": [1, 4],
+          "startTime": "09:00",
+          "endTime": "10:30",
+          "side": "South/West"
+        }
+      ]
+    }
+  ],
+  "exceptions": {
+    "holidays": true,
+    "snowEmergency": true,
+    "specialEvents": true
+  }
+}
