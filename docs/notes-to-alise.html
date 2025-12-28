@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Park-IT Architecture | Sidekick Studios</title>
+    <meta name="description" content="Interactive architecture diagram for Park-IT - your parking sidekick. Built by Sidekick Studios.">
+    <meta property="og:title" content="Park-IT Architecture">
+    <meta property="og:description" content="Interactive architecture diagram for Park-IT mobile app">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://sidekdev.github.io/Park-It/docs/architecture.html">
+    <meta name="theme-color" content="#4A7FC1">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🅿️</text></svg>">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --sidekick-blue: #4A7FC1;
+            --deep-blue: #2D4A6E;
+            --hero-red: #E53935;
+            --light-blue: #B8D4F0;
+            --bg-dark: #0A0A0F;
+            --bg-card: #12121A;
+            --text-primary: #FFFFFF;
+            --text-secondary: #8B92A5;
+            --border: #2A2A3A;
+        }
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Speed lines background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 50px,
+                    rgba(74, 127, 193, 0.03) 50px,
+                    rgba(74, 127, 193, 0.03) 51px
+                );
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--sidekick-blue), var(--deep-blue));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 20px rgba(74, 127, 193, 0.4);
+        }
+        
+        h1 {
+            font-size: 42px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--light-blue), var(--sidekick-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 18px;
+            margin-top: 8px;
+        }
+        
+        /* Navigation tabs */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+        
+        .tab:hover {
+            border-color: var(--sidekick-blue);
+            color: var(--text-primary);
+        }
+        
+        .tab.active {
+            background: var(--sidekick-blue);
+            border-color: var(--sidekick-blue);
+            color: white;
+        }
+        
+        /* Diagram container */
+        .diagram {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .diagram::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--sidekick-blue), var(--hero-red), var(--sidekick-blue));
+        }
+        
+        /* Flow diagram */
+        .flow {
+            display: none;
+        }
+        
+        .flow.active {
+            display: block;
+        }
+        
+        /* Architecture overview */
+        .arch-grid {
+            display: grid;
+            grid-template-columns: 1fr 100px 1fr 100px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+        
+        @media (max-width: 1000px) {
+            .arch-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            .arrow-col {
+                display: none;
+            }
+        }
+        
+        .layer {
+            background: rgba(74, 127, 193, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+        
+        .layer-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--sidekick-blue);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .layer-title::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--sidekick-blue);
+            border-radius: 50%;
+        }
+        
+        .file-group {
+            margin-bottom: 20px;
+        }
+        
+        .file-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .file-group-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .file {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .file:hover {
+            border-color: var(--sidekick-blue);
+            transform: translateX(4px);
+        }
+        
+        .file.selected {
+            border-color: var(--hero-red);
+            background: rgba(229, 57, 53, 0.1);
+        }
+        
+        .file-name {
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            color: var(--light-blue);
+            margin-bottom: 4px;
+        }
+        
+        .file-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .arrow-col {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--sidekick-blue);
+            font-size: 32px;
+        }
+        
+        /* Detail panel */
+        .detail-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 32px;
+            margin-top: 30px;
+        }
+        
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .detail-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--sidekick-blue), var(--deep-blue));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .detail-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 20px;
+            color: var(--light-blue);
+        }
+        
+        .detail-path {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .detail-content h3 {
+            font-size: 16px;
+            color: var(--text-primary);
+            margin: 20px 0 12px 0;
+        }
+        
+        .detail-content h3:first-child {
+            margin-top: 0;
+        }
+        
+        .detail-content p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+        
+        .detail-content ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .detail-content li {
+            color: var(--text-secondary);
+            padding: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .detail-content li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--sidekick-blue);
+        }
+        
+        .code-block {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 16px 0;
+            overflow-x: auto;
+        }
+        
+        .code-block code {
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            color: var(--light-blue);
+            white-space: pre;
+        }
+        
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(74, 127, 193, 0.2);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--sidekick-blue);
+            font-family: 'Space Mono', monospace;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .tag.red {
+            background: rgba(229, 57, 53, 0.2);
+            color: var(--hero-red);
+        }
+        
+        .tag.green {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+        
+        /* Data flow diagram */
+        .data-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .flow-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .flow-box {
+            background: var(--bg-dark);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 24px;
+            text-align: center;
+            min-width: 150px;
+            transition: all 0.3s ease;
+        }
+        
+        .flow-box:hover {
+            border-color: var(--sidekick-blue);
+            transform: scale(1.05);
+        }
+        
+        .flow-box.user {
+            border-color: var(--hero-red);
+            background: rgba(229, 57, 53, 0.1);
+        }
+        
+        .flow-box.sdk {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+        
+        .flow-box.service {
+            border-color: var(--sidekick-blue);
+            background: rgba(74, 127, 193, 0.1);
+        }
+        
+        .flow-box.backend {
+            border-color: #FF9800;
+            background: rgba(255, 152, 0, 0.1);
+        }
+        
+        .flow-box-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .flow-box-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+        
+        .flow-box-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        .flow-arrow {
+            color: var(--sidekick-blue);
+            font-size: 24px;
+        }
+        
+        .flow-arrow.down {
+            transform: rotate(90deg);
+        }
+        
+        .flow-section-title {
+            text-align: center;
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+        
+        /* Legend */
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .legend-dot.user { background: var(--hero-red); }
+        .legend-dot.sdk { background: #4CAF50; }
+        .legend-dot.service { background: var(--sidekick-blue); }
+        .legend-dot.backend { background: #FF9800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">P</div>
+                <div>
+                    <h1>Park-IT Architecture</h1>
+                    <p class="subtitle">How all the pieces work together</p>
+                </div>
+            </div>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="showFlow('overview')">Overview</div>
+            <div class="tab" onclick="showFlow('mvpscope')">MVP Scope</div>
+            <div class="tab" onclick="showFlow('github')">GitHub Structure</div>
+            <div class="tab" onclick="showFlow('dataflow')">Data Flow</div>
+            <div class="tab" onclick="showFlow('techstack')">Tech Stack</div>
+            <div class="tab" onclick="showFlow('mobile')">Mobile App</div>
+            <div class="tab" onclick="showFlow('backend')">Backend</div>
+            <div class="tab" onclick="showFlow('services')">Services</div>
+        </div>
+        
+        <!-- OVERVIEW -->
+        <div class="diagram">
+            <div class="flow active" id="overview">
+                <div class="arch-grid">
+                    <!-- User Layer -->
+                    <div class="layer">
+                        <div class="layer-title">User Input</div>
+                        <div class="file" onclick="selectFile('user-action')">
+                            <div class="file-name">👤 User Action</div>
+                            <div class="file-desc">Parks car, taps buttons, moves car</div>
+                        </div>
+                        <div class="file" onclick="selectFile('apple-sdk')">
+                            <div class="file-name">🍎 Apple SDK</div>
+                            <div class="file-desc">CoreMotion activity detection</div>
+                        </div>
+                        <div class="file" onclick="selectFile('google-sdk')">
+                            <div class="file-name">🤖 Google SDK</div>
+                            <div class="file-desc">Activity Recognition API</div>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow-col">→</div>
+                    
+                    <!-- Mobile App Layer -->
+                    <div class="layer">
+                        <div class="layer-title">Mobile App (React Native)</div>
+                        <div class="file-group">
+                            <div class="file-group-title">📱 Screens</div>
+                            <div class="file" onclick="selectFile('screens')">
+                                <div class="file-name">app/(main)/*.tsx</div>
+                                <div class="file-desc">Home, Session, History, Settings</div>
+                            </div>
+                        </div>
+                        <div class="file-group">
+                            <div class="file-group-title">⚙️ Services</div>
+                            <div class="file" onclick="selectFile('parking-state')">
+                                <div class="file-name">parkingState.ts</div>
+                                <div class="file-desc">Listens to SDK parking events</div>
+                            </div>
+                            <div class="file" onclick="selectFile('api-service')">
+                                <div class="file-name">api.ts</div>
+                                <div class="file-desc">Talks to backend</div>
+                            </div>
+                        </div>
+                        <div class="file-group">
+                            <div class="file-group-title">🗄️ State</div>
+                            <div class="file" onclick="selectFile('stores')">
+                                <div class="file-name">stores/*.ts</div>
+                                <div class="file-desc">Zustand state management</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="arrow-col">→</div>
+                    
+                    <!-- Backend Layer -->
+                    <div class="layer">
+                        <div class="layer-title">Backend (FastAPI)</div>
+                        <div class="file-group">
+                            <div class="file-group-title">🛣️ API Routes</div>
+                            <div class="file" onclick="selectFile('routes')">
+                                <div class="file-name">routes/*.py</div>
+                                <div class="file-desc">Auth, Parking, Rules, Notifications</div>
+                            </div>
+                        </div>
+                        <div class="file-group">
+                            <div class="file-group-title">🧠 Services</div>
+                            <div class="file" onclick="selectFile('rules-engine')">
+                                <div class="file-name">rules_engine.py</div>
+                                <div class="file-desc">Location → Rules → Status</div>
+                            </div>
+                            <div class="file" onclick="selectFile('push-service')">
+                                <div class="file-name">push_service.py</div>
+                                <div class="file-desc">Send notifications via APNs/FCM</div>
+                            </div>
+                        </div>
+                        <div class="file-group">
+                            <div class="file-group-title">💾 Data</div>
+                            <div class="file" onclick="selectFile('database')">
+                                <div class="file-name">PostgreSQL</div>
+                                <div class="file-desc">Users, Sessions, Rules</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- GITHUB STRUCTURE -->
+            <div class="flow" id="github">
+                <div class="data-flow">
+                    
+                    <!-- Repo Link -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 30px; padding: 20px; background: rgba(74, 127, 193, 0.1); border-radius: 12px; border: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="font-size: 28px;">📦</div>
+                            <div>
+                                <div style="font-family: 'Space Mono', monospace; font-size: 16px; color: var(--light-blue);">SideKDev/Park-It</div>
+                                <div style="font-size: 13px; color: var(--text-secondary);">Park-It, your parking sidekick</div>
+                            </div>
+                        </div>
+                        <a href="https://github.com/SideKDev/Park-It" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; background: var(--sidekick-blue); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">
+                            <span>View on GitHub</span>
+                            <span>→</span>
+                        </a>
+                    </div>
+                    
+                    <div class="flow-section-title">📁 Repository Structure</div>
+                    
+                    <!-- File Tree -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px; margin-top: 20px;">
+                        
+                        <!-- Mobile -->
+                        <div class="layer">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                                <div style="width: 40px; height: 40px; background: rgba(97, 218, 251, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;">📱</div>
+                                <div>
+                                    <div style="font-family: 'Space Mono', monospace; font-size: 16px; color: #61DAFB;">mobile/</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">React Native + Expo App</div>
+                                </div>
+                            </div>
+                            
+                            <div style="font-family: 'Space Mono', monospace; font-size: 12px; line-height: 1.8; color: var(--text-secondary); background: var(--bg-dark); padding: 16px; border-radius: 8px; overflow-x: auto; white-space: pre;">
+<span style="color: var(--light-blue);">mobile/</span>
+├── <span style="color: var(--light-blue);">app/</span>
+│   ├── _layout.tsx
+│   ├── index.tsx
+│   ├── <span style="color: var(--light-blue);">(auth)/</span>
+│   │   ├── login.tsx
+│   │   └── onboarding.tsx
+│   └── <span style="color: var(--light-blue);">(main)/</span>
+│       ├── index.tsx
+│       ├── park.tsx
+│       ├── session.tsx
+│       ├── history.tsx
+│       └── settings.tsx
+├── <span style="color: var(--light-blue);">components/</span>
+│   ├── StatusBadge.tsx
+│   ├── ParkingCard.tsx
+│   └── <span style="color: var(--light-blue);">ui/</span>
+├── <span style="color: var(--light-blue);">services/</span>
+│   ├── auth.ts
+│   ├── api.ts
+│   ├── location.ts
+│   └── notifications.ts
+├── <span style="color: var(--light-blue);">stores/</span>
+│   ├── authStore.ts
+│   └── parkingStore.ts
+├── <span style="color: var(--light-blue);">types/</span>
+│   └── index.ts
+├── <span style="color: var(--light-blue);">constants/</span>
+│   └── colors.ts
+├── app.json
+├── package.json
+└── tsconfig.json</div>
+                        </div>
+                        
+                        <!-- Backend -->
+                        <div class="layer">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                                <div style="width: 40px; height: 40px; background: rgba(55, 118, 171, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;">🐍</div>
+                                <div>
+                                    <div style="font-family: 'Space Mono', monospace; font-size: 16px; color: #3776AB;">backend/</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">Python FastAPI Server</div>
+                                </div>
+                            </div>
+                            
+                            <div style="font-family: 'Space Mono', monospace; font-size: 12px; line-height: 1.8; color: var(--text-secondary); background: var(--bg-dark); padding: 16px; border-radius: 8px; overflow-x: auto; white-space: pre;">
+<span style="color: var(--light-blue);">backend/</span>
+├── <span style="color: var(--light-blue);">api/</span>
+│   ├── main.py
+│   ├── dependencies.py
+│   └── <span style="color: var(--light-blue);">routes/</span>
+│       ├── auth.py
+│       ├── users.py
+│       ├── parking.py
+│       └── notifications.py
+├── <span style="color: var(--light-blue);">services/</span>
+│   ├── <span style="color: var(--light-blue);">auth/</span>
+│   │   ├── apple.py
+│   │   ├── google.py
+│   │   └── token_service.py
+│   ├── rules_engine.py
+│   ├── geocoder.py
+│   └── push_service.py
+├── <span style="color: var(--light-blue);">models/</span>
+│   ├── user.py
+│   ├── parking_session.py
+│   └── push_token.py
+├── <span style="color: var(--light-blue);">data/</span>
+│   ├── nyc_cleaning.json
+│   ├── meter_zones.json
+│   └── holidays.json
+├── <span style="color: var(--light-blue);">db/</span>
+│   └── database.py
+├── requirements.txt
+└── Dockerfile</div>
+                        </div>
+                        
+                    </div>
+                    
+                    <!-- Root Files -->
+                    <div class="layer" style="margin-top: 24px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                            <div style="width: 40px; height: 40px; background: rgba(74, 127, 193, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;">📄</div>
+                            <div>
+                                <div style="font-family: 'Space Mono', monospace; font-size: 16px; color: var(--sidekick-blue);">Root Files</div>
+                                <div style="font-size: 12px; color: var(--text-secondary);">Repository root</div>
+                            </div>
+                        </div>
+                        
+                        <div style="font-family: 'Space Mono', monospace; font-size: 12px; line-height: 1.8; color: var(--text-secondary); background: var(--bg-dark); padding: 16px; border-radius: 8px; white-space: pre;">
+<span style="color: var(--light-blue);">Park-It/</span>
+├── <span style="color: var(--light-blue);">mobile/</span>
+├── <span style="color: var(--light-blue);">backend/</span>
+├── <span style="color: var(--light-blue);">docs/</span>
+│   └── architecture.html
+├── README.md
+├── .gitignore
+└── LICENSE</div>
+                    </div>
+                    
+                    <!-- File Checklist -->
+                    <div style="margin-top: 40px;">
+                        <div class="flow-section-title">✅ MVP File Checklist</div>
+                        <p style="text-align: center; color: var(--text-secondary); font-size: 14px; margin-bottom: 24px;">Track progress as files get created</p>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px;">
+                            
+                            <!-- Mobile Checklist -->
+                            <div class="layer">
+                                <div style="font-family: 'Space Mono', monospace; font-size: 14px; color: #61DAFB; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                                    <span>📱</span> Mobile App Files
+                                </div>
+                                
+                                <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; font-weight: 600;">Config</div>
+                                <div class="checklist">
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">app.json</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Expo config</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">package.json</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Dependencies</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">tsconfig.json</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— TypeScript</span>
+                                    </label>
+                                </div>
+                                
+                                <div style="font-size: 14px; color: var(--text-secondary); margin: 16px 0 12px 0; font-weight: 600;">Screens (app/)</div>
+                                <div class="checklist">
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">_layout.tsx</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Root layout</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">login.tsx</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— SSO screen</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">onboarding.tsx</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Permissions</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">index.tsx</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Home screen</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">park.tsx</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Manual park</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">session.tsx</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Active session</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">history.tsx</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Past sessions</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">settings.tsx</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Preferences</span>
+                                    </label>
+                                </div>
+                                
+                                <div style="font-size: 14px; color: var(--text-secondary); margin: 16px 0 12px 0; font-weight: 600;">Services</div>
+                                <div class="checklist">
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">auth.ts</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— SSO logic</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">api.ts</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Backend client</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">location.ts</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— GPS</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">notifications.ts</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Push</span>
+                                    </label>
+                                </div>
+                                
+                                <div style="font-size: 14px; color: var(--text-secondary); margin: 16px 0 12px 0; font-weight: 600;">State & Types</div>
+                                <div class="checklist">
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">authStore.ts</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— User state</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">parkingStore.ts</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Session state</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">types/index.ts</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— TypeScript types</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">colors.ts</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Brand colors</span>
+                                    </label>
+                                </div>
+                                
+                                <div style="font-size: 14px; color: var(--text-secondary); margin: 16px 0 12px 0; font-weight: 600;">Components</div>
+                                <div class="checklist">
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">StatusBadge.tsx</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— 🟢🟡🔴</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">ParkingCard.tsx</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Session card</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Backend Checklist -->
+                            <div class="layer">
+                                <div style="font-family: 'Space Mono', monospace; font-size: 14px; color: #3776AB; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                                    <span>🐍</span> Backend Files
+                                </div>
+                                
+                                <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; font-weight: 600;">Config</div>
+                                <div class="checklist">
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">requirements.txt</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Dependencies</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">Dockerfile</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Container</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">.env.example</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Env template</span>
+                                    </label>
+                                </div>
+                                
+                                <div style="font-size: 14px; color: var(--text-secondary); margin: 16px 0 12px 0; font-weight: 600;">API</div>
+                                <div class="checklist">
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">main.py</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— FastAPI app</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">dependencies.py</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Auth middleware</span>
+                                    </label>
+                                </div>
+                                
+                                <div style="font-size: 14px; color: var(--text-secondary); margin: 16px 0 12px 0; font-weight: 600;">Routes</div>
+                                <div class="checklist">
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">auth.py</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— SSO endpoints</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">users.py</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Profile</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">parking.py</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Sessions CRUD</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">notifications.py</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Push tokens</span>
+                                    </label>
+                                </div>
+                                
+                                <div style="font-size: 14px; color: var(--text-secondary); margin: 16px 0 12px 0; font-weight: 600;">Services</div>
+                                <div class="checklist">
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">token_service.py</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— JWT</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">apple.py</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Apple SSO</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">google.py</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Google SSO</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">rules_engine.py</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Core logic</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">geocoder.py</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Address lookup</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">push_service.py</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Notifications</span>
+                                    </label>
+                                </div>
+                                
+                                <div style="font-size: 14px; color: var(--text-secondary); margin: 16px 0 12px 0; font-weight: 600;">Models</div>
+                                <div class="checklist">
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">user.py</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— User model</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">parking_session.py</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Session model</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">push_token.py</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Push token model</span>
+                                    </label>
+                                </div>
+                                
+                                <div style="font-size: 14px; color: var(--text-secondary); margin: 16px 0 12px 0; font-weight: 600;">Database</div>
+                                <div class="checklist">
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">database.py</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— SQLAlchemy</span>
+                                    </label>
+                                </div>
+                                
+                                <div style="font-size: 14px; color: var(--text-secondary); margin: 16px 0 12px 0; font-weight: 600;">Static Data</div>
+                                <div class="checklist">
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">nyc_cleaning.json</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Cleaning rules</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">meter_zones.json</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Meter data</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;">
+                                        <input type="checkbox" style="width: 18px; height: 18px; accent-color: #4CAF50;">
+                                        <code style="color: var(--light-blue);">holidays.json</code>
+                                        <span style="color: var(--text-secondary); font-size: 12px;">— Holiday calendar</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        
+                        <!-- Progress Counter -->
+                        <div style="margin-top: 30px; padding: 20px; background: var(--bg-dark); border-radius: 12px; text-align: center;">
+                            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">Total MVP Files</div>
+                            <div style="font-family: 'Space Mono', monospace; font-size: 32px; color: var(--sidekick-blue);">~45 files</div>
+                            <div style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">Use checkboxes above to track your progress</div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <!-- MVP SCOPE -->
+            <div class="flow" id="mvpscope">
+                <div class="data-flow">
+                    <div class="flow-section-title">🎯 What's Actually in the MVP?</div>
+                    
+                    <!-- Two Paths -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-top: 20px;">
+                        
+                        <!-- Path A -->
+                        <div class="layer" style="border: 2px solid #4CAF50; background: rgba(76, 175, 80, 0.05);">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 48px; height: 48px; background: rgba(76, 175, 80, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🚀</div>
+                                    <div>
+                                        <div style="font-family: 'Space Mono', monospace; font-size: 18px; color: #4CAF50;">Path A: Lean MVP</div>
+                                        <div style="font-size: 14px; color: var(--text-secondary);">Week 1 — Manual-first</div>
+                                    </div>
+                                </div>
+                                <div style="background: #4CAF50; color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">RECOMMENDED</div>
+                            </div>
+                            
+                            <div style="background: var(--bg-dark); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                                <div style="font-family: 'Space Mono', monospace; font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">USER FLOW</div>
+                                <div style="color: var(--light-blue); font-size: 14px; line-height: 1.8;">
+                                    User taps "I parked" → App gets GPS → Backend checks rules → Shows 🟢🟡🔴 → Sends notification before expiry
+                                </div>
+                            </div>
+                            
+                            <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">✅ Included:</div>
+                            <ul style="color: var(--text-secondary); font-size: 14px; line-height: 2; padding-left: 20px; margin-bottom: 20px;">
+                                <li>React Native + Expo + TypeScript</li>
+                                <li>Apple / Google SSO login</li>
+                                <li>Manual "I parked" button</li>
+                                <li>GPS location capture</li>
+                                <li>Rules engine (cleaning schedules, meters)</li>
+                                <li>Status display (🟢🟡🔴)</li>
+                                <li>Push notifications</li>
+                                <li>ParkMobile deep link + manual "I paid"</li>
+                                <li>Parking history</li>
+                                <li>FastAPI backend</li>
+                                <li>SQLite (dev) → PostgreSQL (prod)</li>
+                            </ul>
+                            
+                            <div style="font-size: 14px; font-weight: 600; color: var(--hero-red); margin-bottom: 12px;">❌ Skipped:</div>
+                            <ul style="color: var(--text-secondary); font-size: 14px; line-height: 2; padding-left: 20px; margin-bottom: 20px;">
+                                <li>Bluetooth car pairing</li>
+                                <li>Auto parking detection</li>
+                                <li>Activity Recognition SDK</li>
+                                <li>Background location tracking</li>
+                                <li>PostGIS geo queries</li>
+                                <li>Alembic migrations</li>
+                            </ul>
+                            
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                <div style="background: rgba(76, 175, 80, 0.2); color: #4CAF50; padding: 8px 16px; border-radius: 8px; font-size: 13px;">⏱️ 7-10 days</div>
+                                <div style="background: rgba(76, 175, 80, 0.2); color: #4CAF50; padding: 8px 16px; border-radius: 8px; font-size: 13px;">📱 TestFlight ready</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Path B -->
+                        <div class="layer" style="border: 2px solid var(--sidekick-blue); background: rgba(74, 127, 193, 0.05);">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                                <div style="width: 48px; height: 48px; background: rgba(74, 127, 193, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🎯</div>
+                                <div>
+                                    <div style="font-family: 'Space Mono', monospace; font-size: 18px; color: var(--sidekick-blue);">Path B: Full MVP</div>
+                                    <div style="font-size: 14px; color: var(--text-secondary);">Week 1-2 — Auto-detection</div>
+                                </div>
+                            </div>
+                            
+                            <div style="background: var(--bg-dark); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                                <div style="font-family: 'Space Mono', monospace; font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">USER FLOW</div>
+                                <div style="color: var(--light-blue); font-size: 14px; line-height: 1.8;">
+                                    User parks → Bluetooth disconnects → App auto-detects → Backend checks rules → Shows 🟢🟡🔴
+                                </div>
+                            </div>
+                            
+                            <div style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">✅ Includes everything in Path A, plus:</div>
+                            <ul style="color: var(--text-secondary); font-size: 14px; line-height: 2; padding-left: 20px; margin-bottom: 20px;">
+                                <li>Bluetooth car pairing (onboarding)</li>
+                                <li>Auto parking detection on BT disconnect</li>
+                                <li>Activity Recognition as backup</li>
+                                <li>Background location monitoring</li>
+                                <li>Auto session end when car moves</li>
+                            </ul>
+                            
+                            <div style="font-size: 14px; font-weight: 600; color: var(--hero-red); margin-bottom: 12px;">❌ Still Skipped:</div>
+                            <ul style="color: var(--text-secondary); font-size: 14px; line-height: 2; padding-left: 20px; margin-bottom: 20px;">
+                                <li>PostGIS (use simple distance math)</li>
+                                <li>Alembic (rebuild DB as needed)</li>
+                                <li>Live web scraping (use static data)</li>
+                            </ul>
+                            
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                <div style="background: rgba(74, 127, 193, 0.2); color: var(--sidekick-blue); padding: 8px 16px; border-radius: 8px; font-size: 13px;">⏱️ 10-14 days</div>
+                                <div style="background: rgba(74, 127, 193, 0.2); color: var(--sidekick-blue); padding: 8px 16px; border-radius: 8px; font-size: 13px;">🔥 Full vision</div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    
+                    <!-- Tech Stack Breakdown -->
+                    <div style="margin-top: 40px;">
+                        <div class="flow-section-title">🛠️ Technology Decisions</div>
+                        
+                        <div style="overflow-x: auto; margin-top: 20px;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid var(--border);">
+                                        <th style="text-align: left; padding: 16px; color: var(--text-secondary); font-weight: 600;">Technology</th>
+                                        <th style="text-align: center; padding: 16px; color: #4CAF50; font-weight: 600;">Path A (Lean)</th>
+                                        <th style="text-align: center; padding: 16px; color: var(--sidekick-blue); font-weight: 600;">Path B (Full)</th>
+                                        <th style="text-align: left; padding: 16px; color: var(--text-secondary); font-weight: 600;">Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 16px; color: var(--light-blue); font-family: 'Space Mono', monospace;">React Native + Expo</td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="padding: 16px; color: var(--text-secondary);">Core framework — required</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 16px; color: var(--light-blue); font-family: 'Space Mono', monospace;">TypeScript</td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="padding: 16px; color: var(--text-secondary);">No extra cost, prevents bugs</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 16px; color: var(--light-blue); font-family: 'Space Mono', monospace;">Zustand</td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="padding: 16px; color: var(--text-secondary);">State management — required</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 16px; color: var(--light-blue); font-family: 'Space Mono', monospace;">Python + FastAPI</td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="padding: 16px; color: var(--text-secondary);">Backend API — required</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 16px; color: var(--light-blue); font-family: 'Space Mono', monospace;">SQLAlchemy</td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="padding: 16px; color: var(--text-secondary);">ORM — makes DB work easier</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 16px; color: var(--light-blue); font-family: 'Space Mono', monospace;">PostgreSQL</td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #FFC107; font-size: 18px;">⚠️</span></td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="padding: 16px; color: var(--text-secondary);">Can use SQLite locally for Path A</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 16px; color: var(--light-blue); font-family: 'Space Mono', monospace;">PostGIS</td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: var(--hero-red); font-size: 18px;">❌</span></td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: var(--hero-red); font-size: 18px;">❌</span></td>
+                                        <td style="padding: 16px; color: var(--text-secondary);">Simple distance math works fine</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 16px; color: var(--light-blue); font-family: 'Space Mono', monospace;">Alembic (migrations)</td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: var(--hero-red); font-size: 18px;">❌</span></td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: var(--hero-red); font-size: 18px;">❌</span></td>
+                                        <td style="padding: 16px; color: var(--text-secondary);">Just rebuild DB during MVP</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 16px; color: var(--light-blue); font-family: 'Space Mono', monospace;">expo-location</td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="padding: 16px; color: var(--text-secondary);">GPS capture — required</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 16px; color: var(--light-blue); font-family: 'Space Mono', monospace;">expo-notifications</td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="padding: 16px; color: var(--text-secondary);">Push alerts — required</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 16px; color: var(--light-blue); font-family: 'Space Mono', monospace;">react-native-ble-plx</td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: var(--hero-red); font-size: 18px;">❌</span></td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="padding: 16px; color: var(--text-secondary);">Bluetooth car pairing</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 16px; color: var(--light-blue); font-family: 'Space Mono', monospace;">react-native-activity-recognition</td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: var(--hero-red); font-size: 18px;">❌</span></td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="padding: 16px; color: var(--text-secondary);">Auto parking detection</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 16px; color: var(--light-blue); font-family: 'Space Mono', monospace;">expo-task-manager</td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: var(--hero-red); font-size: 18px;">❌</span></td>
+                                        <td style="text-align: center; padding: 16px;"><span style="color: #4CAF50; font-size: 18px;">✅</span></td>
+                                        <td style="padding: 16px; color: var(--text-secondary);">Background location</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Recommendation -->
+                    <div style="margin-top: 40px; padding: 24px; background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05)); border-radius: 16px; border: 2px solid #4CAF50;">
+                        <div style="display: flex; align-items: flex-start; gap: 16px;">
+                            <div style="font-size: 32px;">💡</div>
+                            <div>
+                                <div style="font-family: 'Space Mono', monospace; font-size: 16px; color: #4CAF50; margin-bottom: 8px;">RECOMMENDATION</div>
+                                <p style="color: var(--text-secondary); font-size: 15px; line-height: 1.7; margin-bottom: 16px;">
+                                    <strong style="color: var(--text-primary);">Start with Path A.</strong> Get the core loop working in Week 1: manual parking → rules lookup → status → notifications. This validates the concept with real users.
+                                </p>
+                                <p style="color: var(--text-secondary); font-size: 15px; line-height: 1.7; margin-bottom: 0;">
+                                    <strong style="color: var(--text-primary);">Add auto-detection in Week 2.</strong> Once the foundation is solid, layer in Bluetooth pairing and Activity Recognition. The code structure supports this — we're not cutting corners, just prioritizing.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Phase Timeline -->
+                    <div style="margin-top: 40px;">
+                        <div class="flow-section-title">📅 Development Timeline</div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 20px;">
+                            <div style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; padding: 20px; border-left: 4px solid #4CAF50;">
+                                <div style="font-family: 'Space Mono', monospace; font-size: 14px; color: #4CAF50; margin-bottom: 8px;">DAYS 1-2</div>
+                                <div style="font-size: 15px; color: var(--text-primary); margin-bottom: 8px;">Foundation</div>
+                                <ul style="color: var(--text-secondary); font-size: 13px; line-height: 1.8; padding-left: 16px; margin: 0;">
+                                    <li>Project setup</li>
+                                    <li>Auth (SSO)</li>
+                                    <li>Backend scaffold</li>
+                                    <li>Branding</li>
+                                </ul>
+                            </div>
+                            <div style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; padding: 20px; border-left: 4px solid #4CAF50;">
+                                <div style="font-family: 'Space Mono', monospace; font-size: 14px; color: #4CAF50; margin-bottom: 8px;">DAYS 3-4</div>
+                                <div style="font-size: 15px; color: var(--text-primary); margin-bottom: 8px;">Core Flow</div>
+                                <ul style="color: var(--text-secondary); font-size: 13px; line-height: 1.8; padding-left: 16px; margin: 0;">
+                                    <li>Manual "I parked"</li>
+                                    <li>Location capture</li>
+                                    <li>Home screen UI</li>
+                                    <li>Status display</li>
+                                </ul>
+                            </div>
+                            <div style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; padding: 20px; border-left: 4px solid #4CAF50;">
+                                <div style="font-family: 'Space Mono', monospace; font-size: 14px; color: #4CAF50; margin-bottom: 8px;">DAYS 5-6</div>
+                                <div style="font-size: 15px; color: var(--text-primary); margin-bottom: 8px;">Rules + Notifications</div>
+                                <ul style="color: var(--text-secondary); font-size: 13px; line-height: 1.8; padding-left: 16px; margin: 0;">
+                                    <li>Rules engine</li>
+                                    <li>Push notifications</li>
+                                    <li>ParkMobile link</li>
+                                    <li>Payment confirm</li>
+                                </ul>
+                            </div>
+                            <div style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; padding: 20px; border-left: 4px solid #4CAF50;">
+                                <div style="font-family: 'Space Mono', monospace; font-size: 14px; color: #4CAF50; margin-bottom: 8px;">DAYS 7-10</div>
+                                <div style="font-size: 15px; color: var(--text-primary); margin-bottom: 8px;">Polish + Ship</div>
+                                <ul style="color: var(--text-secondary); font-size: 13px; line-height: 1.8; padding-left: 16px; margin: 0;">
+                                    <li>History view</li>
+                                    <li>Settings</li>
+                                    <li>Bug fixes</li>
+                                    <li>TestFlight</li>
+                                </ul>
+                            </div>
+                            <div style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; padding: 20px; border-left: 4px solid var(--sidekick-blue);">
+                                <div style="font-family: 'Space Mono', monospace; font-size: 14px; color: var(--sidekick-blue); margin-bottom: 8px;">WEEK 2</div>
+                                <div style="font-size: 15px; color: var(--text-primary); margin-bottom: 8px;">Auto-Detection</div>
+                                <ul style="color: var(--text-secondary); font-size: 13px; line-height: 1.8; padding-left: 16px; margin: 0;">
+                                    <li>Bluetooth pairing</li>
+                                    <li>Activity Recognition</li>
+                                    <li>Background tasks</li>
+                                    <li>Auto session end</li>
+                                </ul>
+                            </div>
+                            <div style="background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; padding: 20px; border-left: 4px solid var(--text-secondary);">
+                                <div style="font-family: 'Space Mono', monospace; font-size: 14px; color: var(--text-secondary); margin-bottom: 8px;">FUTURE</div>
+                                <div style="font-size: 15px; color: var(--text-primary); margin-bottom: 8px;">Post-MVP</div>
+                                <ul style="color: var(--text-secondary); font-size: 13px; line-height: 1.8; padding-left: 16px; margin: 0;">
+                                    <li>Live data scraping</li>
+                                    <li>ParkMobile API</li>
+                                    <li>Android release</li>
+                                    <li>Analytics</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <!-- TECH STACK -->
+            <div class="flow" id="techstack">
+                <div class="data-flow">
+                    <div class="flow-section-title">🛠️ Our Technology Choices & Why</div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-top: 20px;">
+                        
+                        <!-- React Native -->
+                        <div class="layer" style="border-left: 4px solid #61DAFB;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                                <div style="width: 48px; height: 48px; background: rgba(97, 218, 251, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">⚛️</div>
+                                <div style="flex: 1;">
+                                    <div style="font-family: 'Space Mono', monospace; font-size: 16px; color: #61DAFB;">React Native + Expo</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">Mobile Framework</div>
+                                </div>
+                                <div style="background: #4CAF50; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">MVP ✓</div>
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                                <strong style="color: var(--text-primary);">Why not native Swift/Kotlin?</strong><br>
+                                You want both iOS AND Android. Writing two separate codebases doubles the work and maintenance. React Native lets us write once, deploy to both platforms.
+                            </p>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                                <strong style="color: var(--text-primary);">Why Expo?</strong><br>
+                                Expo handles the painful parts: build configs, app signing, push notifications, OTA updates. Without it, you'd spend days fighting Xcode and Android Studio configs.
+                            </p>
+                            <div>
+                                <span class="tag" style="background: rgba(97, 218, 251, 0.2); color: #61DAFB;">1 codebase → 2 platforms</span>
+                                <span class="tag" style="background: rgba(97, 218, 251, 0.2); color: #61DAFB;">Hot reload</span>
+                                <span class="tag" style="background: rgba(97, 218, 251, 0.2); color: #61DAFB;">Large ecosystem</span>
+                            </div>
+                        </div>
+                        
+                        <!-- TypeScript -->
+                        <div class="layer" style="border-left: 4px solid #3178C6;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                                <div style="width: 48px; height: 48px; background: rgba(49, 120, 198, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📘</div>
+                                <div style="flex: 1;">
+                                    <div style="font-family: 'Space Mono', monospace; font-size: 16px; color: #3178C6;">TypeScript</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">Mobile Language</div>
+                                </div>
+                                <div style="background: #4CAF50; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">MVP ✓</div>
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                                <strong style="color: var(--text-primary);">Why not plain JavaScript?</strong><br>
+                                TypeScript catches bugs BEFORE you run the app. When you're passing parking sessions, locations, and user data around, types prevent "undefined is not an object" nightmares.
+                            </p>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                                <strong style="color: var(--text-primary);">Bonus:</strong><br>
+                                Better autocomplete in VS Code. When you type <code>session.</code> it shows you exactly what properties exist.
+                            </p>
+                            <div>
+                                <span class="tag" style="background: rgba(49, 120, 198, 0.2); color: #3178C6;">Type safety</span>
+                                <span class="tag" style="background: rgba(49, 120, 198, 0.2); color: #3178C6;">Better DX</span>
+                                <span class="tag" style="background: rgba(49, 120, 198, 0.2); color: #3178C6;">Catch bugs early</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Python -->
+                        <div class="layer" style="border-left: 4px solid #3776AB;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                                <div style="width: 48px; height: 48px; background: rgba(55, 118, 171, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🐍</div>
+                                <div style="flex: 1;">
+                                    <div style="font-family: 'Space Mono', monospace; font-size: 16px; color: #3776AB;">Python + FastAPI</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">Backend Language & Framework</div>
+                                </div>
+                                <div style="background: #4CAF50; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">MVP ✓</div>
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                                <strong style="color: var(--text-primary);">Why Python over Node.js?</strong><br>
+                                You already know Python from your Istari work. No learning curve. Plus, if we ever add ML features (predicting ticket likelihood, optimal parking times), Python has the best ecosystem for that.
+                            </p>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                                <strong style="color: var(--text-primary);">Why FastAPI over Flask/Django?</strong><br>
+                                FastAPI is modern, async-first, and auto-generates API docs. It's as fast as Node.js but with Python's readability. Django is overkill for an API-only backend.
+                            </p>
+                            <div>
+                                <span class="tag" style="background: rgba(55, 118, 171, 0.2); color: #3776AB;">You know it</span>
+                                <span class="tag" style="background: rgba(55, 118, 171, 0.2); color: #3776AB;">Async support</span>
+                                <span class="tag" style="background: rgba(55, 118, 171, 0.2); color: #3776AB;">Auto API docs</span>
+                            </div>
+                        </div>
+                        
+                        <!-- PostgreSQL -->
+                        <div class="layer" style="border-left: 4px solid #336791;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                                <div style="width: 48px; height: 48px; background: rgba(51, 103, 145, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🐘</div>
+                                <div style="flex: 1;">
+                                    <div style="font-family: 'Space Mono', monospace; font-size: 16px; color: #336791;">PostgreSQL</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">Database</div>
+                                </div>
+                                <div style="background: #4CAF50; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">MVP ✓</div>
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                                <strong style="color: var(--text-primary);">Why SQL over NoSQL (MongoDB)?</strong><br>
+                                Our data is highly relational: Users have Sessions, Sessions have Locations, Locations have Rules. SQL handles these relationships elegantly with JOINs. MongoDB would require messy workarounds.
+                            </p>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                                <strong style="color: var(--text-primary);">MVP Approach:</strong><br>
+                                Use SQLite locally during development (zero setup). Deploy with PostgreSQL on Railway/Render (free tier). Skip PostGIS — simple distance math in Python works fine for MVP.
+                            </p>
+                            <div>
+                                <span class="tag" style="background: rgba(51, 103, 145, 0.2); color: #336791;">Relational data</span>
+                                <span class="tag" style="background: rgba(51, 103, 145, 0.2); color: #336791;">SQLite → Postgres</span>
+                                <span class="tag" style="background: rgba(51, 103, 145, 0.2); color: #336791;">No PostGIS needed</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Zustand -->
+                        <div class="layer" style="border-left: 4px solid #F0B90B;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                                <div style="width: 48px; height: 48px; background: rgba(240, 185, 11, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🐻</div>
+                                <div style="flex: 1;">
+                                    <div style="font-family: 'Space Mono', monospace; font-size: 16px; color: #F0B90B;">Zustand</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">State Management</div>
+                                </div>
+                                <div style="background: #4CAF50; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">MVP ✓</div>
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                                <strong style="color: var(--text-primary);">Why not Redux?</strong><br>
+                                Redux requires tons of boilerplate: actions, reducers, selectors, thunks. Zustand does the same thing in 10 lines of code. For an MVP, simplicity wins.
+                            </p>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                                <strong style="color: var(--text-primary);">Why not Context API?</strong><br>
+                                Context causes unnecessary re-renders. Zustand is optimized — components only re-render when the specific data they use changes.
+                            </p>
+                            <div>
+                                <span class="tag" style="background: rgba(240, 185, 11, 0.2); color: #F0B90B;">Minimal boilerplate</span>
+                                <span class="tag" style="background: rgba(240, 185, 11, 0.2); color: #F0B90B;">Performant</span>
+                                <span class="tag" style="background: rgba(240, 185, 11, 0.2); color: #F0B90B;">Simple API</span>
+                            </div>
+                        </div>
+                        
+                        <!-- SQLAlchemy -->
+                        <div class="layer" style="border-left: 4px solid #CE3D3D;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                                <div style="width: 48px; height: 48px; background: rgba(206, 61, 61, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🔮</div>
+                                <div style="flex: 1;">
+                                    <div style="font-family: 'Space Mono', monospace; font-size: 16px; color: #CE3D3D;">SQLAlchemy</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">ORM (no Alembic for MVP)</div>
+                                </div>
+                                <div style="background: #4CAF50; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">MVP ✓</div>
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                                <strong style="color: var(--text-primary);">Why use an ORM?</strong><br>
+                                Instead of writing raw SQL strings, you write Python classes. <code>User.query.filter_by(email=x)</code> is safer and more readable than string concatenation. Prevents SQL injection attacks.
+                            </p>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                                <strong style="color: var(--text-primary);">Alembic?</strong><br>
+                                Skipped for MVP. We'll just rebuild the database when schema changes. Add migrations later when we have real users.
+                            </p>
+                            <div>
+                                <span class="tag" style="background: rgba(206, 61, 61, 0.2); color: #CE3D3D;">Type-safe queries</span>
+                                <span class="tag" style="background: rgba(206, 61, 61, 0.2); color: #CE3D3D;">SQL injection safe</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Expo Services -->
+                        <div class="layer" style="border-left: 4px solid #4630EB;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                                <div style="width: 48px; height: 48px; background: rgba(70, 48, 235, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📱</div>
+                                <div style="flex: 1;">
+                                    <div style="font-family: 'Space Mono', monospace; font-size: 16px; color: #4630EB;">Expo SDK Libraries</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">Native Features</div>
+                                </div>
+                                <div style="background: #4CAF50; color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">MVP ✓</div>
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                                <strong style="color: var(--text-primary);">What we're using:</strong>
+                            </p>
+                            <ul style="color: var(--text-secondary); font-size: 14px; line-height: 1.8; padding-left: 20px;">
+                                <li><code>expo-location</code> — GPS coordinates</li>
+                                <li><code>expo-notifications</code> — Push notifications</li>
+                                <li><code>expo-auth-session</code> — Apple/Google SSO</li>
+                                <li><code>expo-secure-store</code> — Encrypted token storage</li>
+                                <li><code>expo-task-manager</code> — Background location</li>
+                            </ul>
+                            <div style="margin-top: 16px;">
+                                <span class="tag" style="background: rgba(70, 48, 235, 0.2); color: #4630EB;">Pre-built</span>
+                                <span class="tag" style="background: rgba(70, 48, 235, 0.2); color: #4630EB;">Cross-platform</span>
+                                <span class="tag" style="background: rgba(70, 48, 235, 0.2); color: #4630EB;">Well documented</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Native Bridges -->
+                        <div class="layer" style="border-left: 4px solid #4CAF50; opacity: 0.7;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                                <div style="width: 48px; height: 48px; background: rgba(76, 175, 80, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🌉</div>
+                                <div style="flex: 1;">
+                                    <div style="font-family: 'Space Mono', monospace; font-size: 16px; color: #4CAF50;">Native Bridges</div>
+                                    <div style="font-size: 12px; color: var(--text-secondary);">Platform-Specific Features</div>
+                                </div>
+                                <div style="background: var(--sidekick-blue); color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">PHASE 2</div>
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
+                                <strong style="color: var(--text-primary);">How we access Apple/Google SDKs:</strong><br>
+                                React Native "bridges" let JavaScript talk to native code. These libraries wrap CoreMotion (iOS) and Activity Recognition (Android) so we can detect parking from JS.
+                            </p>
+                            <ul style="color: var(--text-secondary); font-size: 14px; line-height: 1.8; padding-left: 20px;">
+                                <li><code>react-native-activity-recognition</code> — Detects driving/walking/stationary</li>
+                                <li><code>react-native-ble-plx</code> — Bluetooth car pairing</li>
+                            </ul>
+                            <div style="margin-top: 16px;">
+                                <span class="tag green">CoreMotion (iOS)</span>
+                                <span class="tag green">Activity Recognition (Android)</span>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    
+                    <!-- Tech Stack Summary -->
+                    <div style="margin-top: 40px; padding: 24px; background: rgba(74, 127, 193, 0.1); border-radius: 16px; border: 1px solid var(--border);">
+                        <div class="flow-section-title" style="margin-bottom: 20px;">📋 Full Stack Summary</div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                            <div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">FRONTEND</div>
+                                <div style="font-family: 'Space Mono', monospace; color: var(--light-blue);">React Native + Expo</div>
+                                <div style="font-family: 'Space Mono', monospace; color: var(--light-blue);">TypeScript</div>
+                                <div style="font-family: 'Space Mono', monospace; color: var(--light-blue);">Zustand</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">BACKEND</div>
+                                <div style="font-family: 'Space Mono', monospace; color: var(--light-blue);">Python 3.11+</div>
+                                <div style="font-family: 'Space Mono', monospace; color: var(--light-blue);">FastAPI</div>
+                                <div style="font-family: 'Space Mono', monospace; color: var(--light-blue);">SQLAlchemy</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">DATABASE</div>
+                                <div style="font-family: 'Space Mono', monospace; color: var(--light-blue);">PostgreSQL</div>
+                                <div style="font-family: 'Space Mono', monospace; color: var(--light-blue);">PostGIS (geo queries)</div>
+                                <div style="font-family: 'Space Mono', monospace; color: var(--light-blue);">Alembic (migrations)</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">INFRASTRUCTURE</div>
+                                <div style="font-family: 'Space Mono', monospace; color: var(--light-blue);">Railway / Render (hosting)</div>
+                                <div style="font-family: 'Space Mono', monospace; color: var(--light-blue);">APNs + FCM (push)</div>
+                                <div style="font-family: 'Space Mono', monospace; color: var(--light-blue);">EAS Build (app builds)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <!-- DATA FLOW -->
+            <div class="flow" id="dataflow">
+                <div class="data-flow">
+                    <div class="flow-section-title">🚗 When User Parks</div>
+                    <div class="flow-row">
+                        <div class="flow-box user">
+                            <div class="flow-box-icon">🚗</div>
+                            <div class="flow-box-title">User Parks</div>
+                            <div class="flow-box-desc">Bluetooth disconnects</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box sdk">
+                            <div class="flow-box-icon">📡</div>
+                            <div class="flow-box-title">SDK Detects</div>
+                            <div class="flow-box-desc">automotive → stationary</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box service">
+                            <div class="flow-box-icon">📍</div>
+                            <div class="flow-box-title">Capture Location</div>
+                            <div class="flow-box-desc">GPS coordinates</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box backend">
+                            <div class="flow-box-icon">🧠</div>
+                            <div class="flow-box-title">Rules Engine</div>
+                            <div class="flow-box-desc">Check cleaning/meters</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box service">
+                            <div class="flow-box-icon">🟢</div>
+                            <div class="flow-box-title">Show Status</div>
+                            <div class="flow-box-desc">Good until 8am</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flow-section-title" style="margin-top: 40px;">⏰ When Time Expires</div>
+                    <div class="flow-row">
+                        <div class="flow-box backend">
+                            <div class="flow-box-icon">⏰</div>
+                            <div class="flow-box-title">Scheduler</div>
+                            <div class="flow-box-desc">Checks upcoming expirations</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box backend">
+                            <div class="flow-box-icon">📤</div>
+                            <div class="flow-box-title">Push Service</div>
+                            <div class="flow-box-desc">APNs / FCM</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box service">
+                            <div class="flow-box-icon">🔔</div>
+                            <div class="flow-box-title">Notification</div>
+                            <div class="flow-box-desc">"Meter expires in 15 min"</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-box user">
+                            <div class="flow-box-icon">👤</div>
+                            <div class="flow-box-title">User Acts</div>
+                            <div class="flow-box-desc">Pay or move car</div>
+                        </div>
+                    </div>
+                    
+                    <div class="legend">
+                        <div class="legend-item"><div class="legend-dot user"></div> User</div>
+                        <div class="legend-item"><div class="legend-dot sdk"></div> Native SDK</div>
+                        <div class="legend-item"><div class="legend-dot service"></div> App Service</div>
+                        <div class="legend-item"><div class="legend-dot backend"></div> Backend</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MOBILE APP -->
+            <div class="flow" id="mobile">
+                <div class="arch-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                    <div class="layer">
+                        <div class="layer-title">Screens (app/)</div>
+                        <div class="file" onclick="selectFile('login')">
+                            <div class="file-name">login.tsx</div>
+                            <div class="file-desc">Apple/Google SSO buttons</div>
+                        </div>
+                        <div class="file" onclick="selectFile('onboarding')">
+                            <div class="file-name">onboarding.tsx</div>
+                            <div class="file-desc">Permissions, Bluetooth pairing</div>
+                        </div>
+                        <div class="file" onclick="selectFile('home')">
+                            <div class="file-name">index.tsx (Home)</div>
+                            <div class="file-desc">Status dashboard 🟢🟡🔴</div>
+                        </div>
+                        <div class="file" onclick="selectFile('session')">
+                            <div class="file-name">session.tsx</div>
+                            <div class="file-desc">Active parking details</div>
+                        </div>
+                        <div class="file" onclick="selectFile('history')">
+                            <div class="file-name">history.tsx</div>
+                            <div class="file-desc">Past parking sessions</div>
+                        </div>
+                        <div class="file" onclick="selectFile('settings')">
+                            <div class="file-name">settings.tsx</div>
+                            <div class="file-desc">Notification prefs, accounts</div>
+                        </div>
+                    </div>
+                    
+                    <div class="layer">
+                        <div class="layer-title">Services (services/)</div>
+                        <div class="file" onclick="selectFile('auth-service')">
+                            <div class="file-name">auth.ts</div>
+                            <div class="file-desc">SSO logic, token management</div>
+                        </div>
+                        <div class="file" onclick="selectFile('parking-state-detail')">
+                            <div class="file-name">parkingState.ts</div>
+                            <div class="file-desc">Listen to SDK, detect parking</div>
+                        </div>
+                        <div class="file" onclick="selectFile('location-service')">
+                            <div class="file-name">location.ts</div>
+                            <div class="file-desc">GPS, background tracking</div>
+                        </div>
+                        <div class="file" onclick="selectFile('bluetooth-service')">
+                            <div class="file-name">bluetooth.ts</div>
+                            <div class="file-desc">Car pairing, disconnect events</div>
+                        </div>
+                        <div class="file" onclick="selectFile('notifications-service')">
+                            <div class="file-name">notifications.ts</div>
+                            <div class="file-desc">Push token, local alerts</div>
+                        </div>
+                        <div class="file" onclick="selectFile('api-service-detail')">
+                            <div class="file-name">api.ts</div>
+                            <div class="file-desc">HTTP client to backend</div>
+                        </div>
+                    </div>
+                    
+                    <div class="layer">
+                        <div class="layer-title">State (stores/)</div>
+                        <div class="file" onclick="selectFile('auth-store')">
+                            <div class="file-name">authStore.ts</div>
+                            <div class="file-desc">User, tokens, login state</div>
+                        </div>
+                        <div class="file" onclick="selectFile('parking-store')">
+                            <div class="file-name">parkingStore.ts</div>
+                            <div class="file-desc">Current session, status, history</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- BACKEND -->
+            <div class="flow" id="backend">
+                <div class="arch-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                    <div class="layer">
+                        <div class="layer-title">API Routes (routes/)</div>
+                        <div class="file" onclick="selectFile('auth-route')">
+                            <div class="file-name">auth.py</div>
+                            <div class="file-desc">SSO callback, token exchange</div>
+                        </div>
+                        <div class="file" onclick="selectFile('users-route')">
+                            <div class="file-name">users.py</div>
+                            <div class="file-desc">Profile, saved locations</div>
+                        </div>
+                        <div class="file" onclick="selectFile('parking-route')">
+                            <div class="file-name">parking.py</div>
+                            <div class="file-desc">Session CRUD, status lookup</div>
+                        </div>
+                        <div class="file" onclick="selectFile('rules-route')">
+                            <div class="file-name">rules.py</div>
+                            <div class="file-desc">Query rules by location</div>
+                        </div>
+                        <div class="file" onclick="selectFile('notifications-route')">
+                            <div class="file-name">notifications.py</div>
+                            <div class="file-desc">Push token registration</div>
+                        </div>
+                    </div>
+                    
+                    <div class="layer">
+                        <div class="layer-title">Services (services/)</div>
+                        <div class="file" onclick="selectFile('token-service')">
+                            <div class="file-name">token_service.py</div>
+                            <div class="file-desc">JWT create, validate, refresh</div>
+                        </div>
+                        <div class="file" onclick="selectFile('rules-engine-detail')">
+                            <div class="file-name">rules_engine.py</div>
+                            <div class="file-desc">Match coords → rules → status</div>
+                        </div>
+                        <div class="file" onclick="selectFile('geocoder')">
+                            <div class="file-name">geocoder.py</div>
+                            <div class="file-desc">Coords → address/block</div>
+                        </div>
+                        <div class="file" onclick="selectFile('push-service-detail')">
+                            <div class="file-name">push_service.py</div>
+                            <div class="file-desc">APNs + FCM integration</div>
+                        </div>
+                    </div>
+                    
+                    <div class="layer">
+                        <div class="layer-title">Data (models/ + data/)</div>
+                        <div class="file" onclick="selectFile('user-model')">
+                            <div class="file-name">user.py</div>
+                            <div class="file-desc">User DB model</div>
+                        </div>
+                        <div class="file" onclick="selectFile('session-model')">
+                            <div class="file-name">parking_session.py</div>
+                            <div class="file-desc">Session DB model</div>
+                        </div>
+                        <div class="file" onclick="selectFile('cleaning-data')">
+                            <div class="file-name">nyc_cleaning_schedule.json</div>
+                            <div class="file-desc">Street cleaning rules</div>
+                        </div>
+                        <div class="file" onclick="selectFile('meter-data')">
+                            <div class="file-name">meter_zones.json</div>
+                            <div class="file-desc">Meter locations + rates</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SERVICES DEEP DIVE -->
+            <div class="flow" id="services">
+                <div class="data-flow">
+                    <div class="flow-section-title">🔄 Service Responsibilities</div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                        <div class="layer" style="background: rgba(229, 57, 53, 0.1); border-color: var(--hero-red);">
+                            <div class="layer-title" style="color: var(--hero-red);">parkingState.ts</div>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+                                <strong>THE BRAIN</strong><br><br>
+                                Listens to Apple/Google SDKs for activity changes. When it detects 
+                                <code>automotive → stationary</code>, it captures location and triggers 
+                                the parking flow. Also monitors for car movement to auto-end sessions.
+                            </p>
+                            <div style="margin-top: 16px;">
+                                <span class="tag red">Core Logic</span>
+                                <span class="tag">Event Listener</span>
+                            </div>
+                        </div>
+                        
+                        <div class="layer" style="background: rgba(74, 127, 193, 0.1); border-color: var(--sidekick-blue);">
+                            <div class="layer-title">api.ts</div>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+                                <strong>THE MESSENGER</strong><br><br>
+                                HTTP client that talks to the backend. Handles auth headers, error handling, 
+                                retries. All backend communication goes through here.
+                            </p>
+                            <div style="margin-top: 16px;">
+                                <span class="tag">HTTP Client</span>
+                                <span class="tag">Axios</span>
+                            </div>
+                        </div>
+                        
+                        <div class="layer" style="background: rgba(255, 152, 0, 0.1); border-color: #FF9800;">
+                            <div class="layer-title" style="color: #FF9800;">rules_engine.py</div>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+                                <strong>THE JUDGE</strong><br><br>
+                                Takes GPS coordinates, looks up which block/zone, checks cleaning schedules, 
+                                meter rules, holidays. Returns status: 🟢🟡🔴 with reason and expiration time.
+                            </p>
+                            <div style="margin-top: 16px;">
+                                <span class="tag" style="background: rgba(255, 152, 0, 0.2); color: #FF9800;">Core Logic</span>
+                                <span class="tag">Geocoding</span>
+                            </div>
+                        </div>
+                        
+                        <div class="layer" style="background: rgba(76, 175, 80, 0.1); border-color: #4CAF50;">
+                            <div class="layer-title" style="color: #4CAF50;">push_service.py</div>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+                                <strong>THE ALERT SYSTEM</strong><br><br>
+                                Sends push notifications via Apple APNs and Google FCM. Scheduled by 
+                                background workers to fire at the right times (15 min before expiry, etc).
+                            </p>
+                            <div style="margin-top: 16px;">
+                                <span class="tag green">APNs</span>
+                                <span class="tag green">FCM</span>
+                            </div>
+                        </div>
+                        
+                        <div class="layer">
+                            <div class="layer-title">parkingStore.ts</div>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+                                <strong>THE MEMORY</strong><br><br>
+                                Zustand store holding current session, parking status, and history. 
+                                All UI components read from here. Services write to here.
+                            </p>
+                            <div style="margin-top: 16px;">
+                                <span class="tag">Zustand</span>
+                                <span class="tag">State</span>
+                            </div>
+                        </div>
+                        
+                        <div class="layer">
+                            <div class="layer-title">bluetooth.ts</div>
+                            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+                                <strong>THE CAR DETECTOR</strong><br><br>
+                                Monitors paired car Bluetooth. When connection drops, signals to 
+                                parkingState.ts that user likely parked. Most reliable detection method.
+                            </p>
+                            <div style="margin-top: 16px;">
+                                <span class="tag">BLE</span>
+                                <span class="tag">Pairing</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Detail Panel -->
+        <div class="detail-panel" id="detailPanel" style="display: none;">
+            <div class="detail-header">
+                <div class="detail-icon" id="detailIcon">📄</div>
+                <div>
+                    <div class="detail-title" id="detailTitle">Select a file</div>
+                    <div class="detail-path" id="detailPath">Click any file to see details</div>
+                </div>
+            </div>
+            <div class="detail-content" id="detailContent">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const fileDetails = {
+            'parking-state': {
+                icon: '🧠',
+                title: 'parkingState.ts',
+                path: 'mobile/services/parkingState.ts',
+                content: '<h3>Purpose</h3><p>The central nervous system of Park-IT. This service listens to native SDK events and determines when the user has parked or moved their car.</p><h3>Key Responsibilities</h3><ul><li>Subscribe to Activity Recognition events (CoreMotion / Google)</li><li>Detect transition: <code>IN_VEHICLE → STILL</code> = parked</li><li>Capture GPS location when parking detected</li><li>Compare new location to last known location</li><li>Trigger rules lookup via API if location changed</li><li>Update parkingStore with new status</li></ul><h3>Connections</h3><div class="tags"><span class="tag">← bluetooth.ts</span><span class="tag">← location.ts</span><span class="tag">→ api.ts</span><span class="tag">→ parkingStore.ts</span></div><div class="code-block"><code>// Simplified logic\nonActivityChange(activity) {\n  if (activity === \'STILL\' && lastActivity === \'IN_VEHICLE\') {\n    const location = await getLocation();\n    if (!isSameLocation(location, lastParkedLocation)) {\n      const status = await api.getParkingStatus(location);\n      parkingStore.setSession({ location, status });\n    }\n  }\n}</code></div>'
+            },
+            'rules-engine': {
+                icon: '⚖️',
+                title: 'rules_engine.py',
+                path: 'backend/services/rules_engine.py',
+                content: '<h3>Purpose</h3><p>The decision maker. Takes a GPS coordinate and returns whether it\'s safe to park there, and for how long.</p><h3>Key Responsibilities</h3><ul><li>Reverse geocode coordinates → street address</li><li>Look up street in cleaning schedule database</li><li>Check if location is in a meter zone</li><li>Check current date against holiday calendar</li><li>Calculate status: 🟢 GREEN, 🟡 YELLOW, 🔴 RED</li><li>Return expiration time and reason</li></ul><h3>Status Logic</h3><div class="code-block"><code>def get_status(lat, lng, current_time):\n    address = geocode(lat, lng)\n    \n    # Check cleaning schedule\n    cleaning = get_cleaning_schedule(address.block)\n    if is_cleaning_active(cleaning, current_time):\n        return Status.RED, "Street cleaning in progress"\n    \n    # Check meter zone\n    zone = get_meter_zone(lat, lng)\n    if zone and not has_paid(session_id):\n        return Status.YELLOW, "Metered zone - $X/hr"\n    \n    # Calculate next restriction\n    next_event = get_next_restriction(address, current_time)\n    return Status.GREEN, "Good until X"</code></div>'
+            },
+            'api-service': {
+                icon: '🔌',
+                title: 'api.ts',
+                path: 'mobile/services/api.ts',
+                content: '<h3>Purpose</h3><p>HTTP client that handles all communication with the backend. Centralizes auth headers, error handling, and retries.</p><h3>Key Endpoints</h3><ul><li><code>POST /auth/sso</code> — Exchange SSO token for JWT</li><li><code>GET /parking/status?lat=X&lng=Y</code> — Get parking rules</li><li><code>POST /parking/sessions</code> — Create new session</li><li><code>PATCH /parking/sessions/:id</code> — Update session (payment, moved)</li><li><code>GET /parking/history</code> — Get past sessions</li><li><code>POST /notifications/token</code> — Register push token</li></ul><div class="code-block"><code>// api.ts\nimport axios from \'axios\';\nimport { authStore } from \'../stores/authStore\';\n\nconst api = axios.create({\n  baseURL: \'https://api.parkit.app/v1\',\n});\n\napi.interceptors.request.use((config) =&gt; {\n  const token = authStore.getState().token;\n  if (token) {\n    config.headers.Authorization = `Bearer ${token}`;\n  }\n  return config;\n});\n\nexport const getParkingStatus = (lat, lng) =&gt;\n  api.get(\'/parking/status\', { params: { lat, lng } });</code></div>'
+            },
+            'stores': {
+                icon: '🗄️',
+                title: 'Zustand Stores',
+                path: 'mobile/stores/',
+                content: '<h3>Purpose</h3><p>Global state management using Zustand. Simpler than Redux, perfect for React Native.</p><h3>authStore.ts</h3><ul><li><code>user</code> — Current user object</li><li><code>token</code> — JWT for API calls</li><li><code>isAuthenticated</code> — Login state</li><li><code>login()</code> / <code>logout()</code> — Actions</li></ul><h3>parkingStore.ts</h3><ul><li><code>currentSession</code> — Active parking session</li><li><code>status</code> — 🟢🟡🔴 with reason</li><li><code>history</code> — Past sessions</li><li><code>setSession()</code> / <code>endSession()</code> — Actions</li></ul><div class="code-block"><code>// parkingStore.ts\nimport { create } from \'zustand\';\n\nexport const useParkingStore = create((set) =&gt; ({\n  currentSession: null,\n  status: null,\n  history: [],\n  setSession: (session) =&gt; set({ currentSession: session }),\n  endSession: () =&gt; set((state) =&gt; ({\n    currentSession: null,\n    history: [state.currentSession, ...state.history]\n  })),\n}));</code></div>'
+            },
+            'routes': {
+                icon: '🛣️',
+                title: 'API Routes',
+                path: 'backend/api/routes/',
+                content: '<h3>Purpose</h3><p>FastAPI route handlers. Each file handles a domain of the API.</p><h3>Route Files</h3><ul><li><code>auth.py</code> — SSO callback, token exchange, refresh</li><li><code>users.py</code> — Profile, saved locations (home/work)</li><li><code>parking.py</code> — Session CRUD, status lookup</li><li><code>rules.py</code> — Query rules by lat/lng</li><li><code>notifications.py</code> — Push token registration, preferences</li></ul><div class="code-block"><code># parking.py\nfrom fastapi import APIRouter, Depends\nfrom services.rules_engine import get_parking_status\n\nrouter = APIRouter(prefix="/parking", tags=["parking"])\n\n@router.get("/status")\nasync def get_status(\n    lat: float, \n    lng: float,\n    user = Depends(get_current_user)\n):\n    status = await get_parking_status(lat, lng)\n    return {\n        "status": status.level,\n        "reason": status.reason,\n        "expires_at": status.expires_at\n    }</code></div>'
+            },
+            'push-service': {
+                icon: '🔔',
+                title: 'push_service.py',
+                path: 'backend/services/push_service.py',
+                content: '<h3>Purpose</h3><p>Sends push notifications to iOS (APNs) and Android (FCM) devices.</p><h3>Key Functions</h3><ul><li><code>send_notification(user_id, title, body)</code></li><li><code>schedule_notification(user_id, send_at, ...)</code></li><li><code>send_meter_expiry_alert(session_id)</code></li><li><code>send_cleaning_alert(session_id)</code></li></ul><h3>Notification Types</h3><div><span class="tag red">Meter Expiring</span><span class="tag red">Street Cleaning</span><span class="tag">Payment Confirmed</span><span class="tag green">Session Ended</span></div><div class="code-block"><code># Scheduled by background worker\nasync def check_expiring_sessions():\n    sessions = await get_sessions_expiring_soon(minutes=15)\n    for session in sessions:\n        await send_notification(\n            user_id=session.user_id,\n            title="Meter expiring soon",\n            body="Your parking expires in 15 minutes",\n            data={"session_id": session.id}\n        )</code></div>'
+            },
+            'database': {
+                icon: '💾',
+                title: 'Database Schema',
+                path: 'backend/models/',
+                content: '<h3>Tables</h3><h3>users</h3><div class="code-block"><code>id: UUID (PK)\nemail: String\napple_id: String (nullable)\ngoogle_id: String (nullable)\ncreated_at: Timestamp</code></div><h3>parking_sessions</h3><div class="code-block"><code>id: UUID (PK)\nuser_id: UUID (FK → users)\nlatitude: Float\nlongitude: Float\naddress: String\nstatus: Enum (green/yellow/red)\nparking_type: Enum (meter/cleaning/free)\nstarted_at: Timestamp\nended_at: Timestamp (nullable)\npayment_status: Enum (unpaid/paid/expired)\npayment_expires_at: Timestamp (nullable)</code></div><h3>saved_locations</h3><div class="code-block"><code>id: UUID (PK)\nuser_id: UUID (FK → users)\nname: String (home/work/custom)\nlatitude: Float\nlongitude: Float</code></div><h3>push_tokens</h3><div class="code-block"><code>id: UUID (PK)\nuser_id: UUID (FK → users)\ntoken: String\nplatform: Enum (ios/android)\ncreated_at: Timestamp</code></div>'
+            }
+        };
+        
+        function showFlow(flowId) {
+            document.querySelectorAll('.tab').forEach(function(tab) { 
+                tab.classList.remove('active'); 
+            });
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+            
+            document.querySelectorAll('.flow').forEach(function(flow) { 
+                flow.classList.remove('active'); 
+            });
+            var flowEl = document.getElementById(flowId);
+            if (flowEl) {
+                flowEl.classList.add('active');
+            }
+        }
+        
+        function selectFile(fileId) {
+            document.querySelectorAll('.file').forEach(function(file) { 
+                file.classList.remove('selected'); 
+            });
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('selected');
+            }
+            
+            var panel = document.getElementById('detailPanel');
+            if (panel) {
+                panel.style.display = 'block';
+            }
+            
+            var details = fileDetails[fileId];
+            if (details) {
+                var iconEl = document.getElementById('detailIcon');
+                var titleEl = document.getElementById('detailTitle');
+                var pathEl = document.getElementById('detailPath');
+                var contentEl = document.getElementById('detailContent');
+                
+                if (iconEl) iconEl.textContent = details.icon;
+                if (titleEl) titleEl.textContent = details.title;
+                if (pathEl) pathEl.textContent = details.path;
+                if (contentEl) contentEl.innerHTML = details.content;
+            }
+            
+            if (panel) {
+                panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    </script>
+</body>
+</html>
