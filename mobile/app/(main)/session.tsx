@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,8 @@ import { colors, getStatusColor, getStatusBackground } from '@/constants/colors'
 import { PARKMOBILE_CONFIG } from '@/constants/config';
 
 export default function SessionScreen() {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  
   const {
     currentSession,
     isSessionActive,
@@ -24,6 +26,14 @@ export default function SessionScreen() {
     isEndingSession,
     confirmPayment,
   } = useParkingStore();
+
+  // Update current time every minute for time remaining calc
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!isSessionActive || !currentSession) {
@@ -56,9 +66,7 @@ export default function SessionScreen() {
   const handlePayWithParkMobile = async () => {
     const zoneCode = currentSession.location.zoneCode;
     
-    // Copy zone code to clipboard if available
     if (zoneCode) {
-      // Note: Would need expo-clipboard for this
       Alert.alert(
         'Opening ParkMobile',
         `Zone: ${zoneCode}\n\nAfter you pay, come back and tap "I Paid" so we can track it.`,
@@ -67,22 +75,22 @@ export default function SessionScreen() {
           {
             text: 'Open ParkMobile',
             onPress: async () => {
-              const url = zoneCode
-                ? `${PARKMOBILE_CONFIG.IOS_URL_SCHEME}park?zoneId=${zoneCode}`
-                : PARKMOBILE_CONFIG.WEB_URL;
-              
-              const canOpen = await Linking.canOpenURL(PARKMOBILE_CONFIG.IOS_URL_SCHEME);
-              if (canOpen) {
-                await Linking.openURL(url);
-              } else {
-                await Linking.openURL(PARKMOBILE_CONFIG.WEB_URL);
+              try {
+                const canOpen = await Linking.canOpenURL('parkmobile://');
+                if (canOpen) {
+                  await Linking.openURL(`parkmobile://park?zoneId=${zoneCode}`);
+                } else {
+                  await Linking.openURL('https://parkmobile.io');
+                }
+              } catch (e) {
+                await Linking.openURL('https://parkmobile.io');
               }
             },
           },
         ]
       );
     } else {
-      await Linking.openURL(PARKMOBILE_CONFIG.WEB_URL);
+      await Linking.openURL('https://parkmobile.io');
     }
   };
 
@@ -104,19 +112,41 @@ export default function SessionScreen() {
 
   const formatTime = (dateString: string | null) => {
     if (!dateString) return '--:--';
-    const date = new Date(dateString);
+    
+    // Parse the date - handle both ISO strings and timestamps
+    let date: Date;
+    if (typeof dateString === 'string') {
+      // If it's a UTC string without timezone, append Z
+      if (!dateString.includes('Z') && !dateString.includes('+') && !dateString.includes('-', 10)) {
+        date = new Date(dateString + 'Z');
+      } else {
+        date = new Date(dateString);
+      }
+    } else {
+      date = new Date(dateString);
+    }
+    
+    // Format in local timezone
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
   };
 
   const getTimeRemaining = () => {
     if (!currentSession.expiresAt) return null;
-    const now = new Date();
-    const expires = new Date(currentSession.expiresAt);
-    const diff = expires.getTime() - now.getTime();
+    
+    let expires: Date;
+    const expStr = currentSession.expiresAt;
+    if (!expStr.includes('Z') && !expStr.includes('+') && !expStr.includes('-', 10)) {
+      expires = new Date(expStr + 'Z');
+    } else {
+      expires = new Date(expStr);
+    }
+    
+    const diff = expires.getTime() - currentTime.getTime();
     if (diff <= 0) return 'Expired';
     
     const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -126,6 +156,27 @@ export default function SessionScreen() {
       return `${hours}h ${minutes}m remaining`;
     }
     return `${minutes}m remaining`;
+  };
+
+  const getElapsedTime = () => {
+    if (!currentSession.startedAt) return null;
+    
+    let started: Date;
+    const startStr = currentSession.startedAt;
+    if (!startStr.includes('Z') && !startStr.includes('+') && !startStr.includes('-', 10)) {
+      started = new Date(startStr + 'Z');
+    } else {
+      started = new Date(startStr);
+    }
+    
+    const diff = currentTime.getTime() - started.getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m parked`;
+    }
+    return `${minutes}m parked`;
   };
 
   return (
@@ -161,7 +212,8 @@ export default function SessionScreen() {
             <View style={styles.infoRow}>
               <Ionicons name="location" size={20} color={colors.text.secondary} />
               <Text style={styles.infoText}>
-                {currentSession.location.address || 'Unknown address'}
+                {currentSession.location.address || 
+                 `${currentSession.location.latitude.toFixed(4)}, ${currentSession.location.longitude.toFixed(4)}`}
               </Text>
             </View>
             {currentSession.location.zoneCode && (
@@ -185,6 +237,12 @@ export default function SessionScreen() {
                 Started: {formatTime(currentSession.startedAt)}
               </Text>
             </View>
+            {getElapsedTime() && (
+              <View style={styles.infoRow}>
+                <Ionicons name="hourglass" size={20} color={colors.text.secondary} />
+                <Text style={styles.infoText}>{getElapsedTime()}</Text>
+              </View>
+            )}
             {currentSession.expiresAt && (
               <View style={styles.infoRow}>
                 <Ionicons name="alarm" size={20} color={colors.text.secondary} />
@@ -234,7 +292,7 @@ export default function SessionScreen() {
         )}
 
         {/* Rules Info */}
-        {currentSession.applicableRules.length > 0 && (
+        {currentSession.applicableRules && currentSession.applicableRules.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Parking Rules</Text>
             <View style={styles.infoCard}>
