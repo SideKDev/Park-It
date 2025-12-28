@@ -1,166 +1,110 @@
-import { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  Platform,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import * as AppleAuthentication from 'expo-apple-authentication';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '@/stores/authStore';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { colors } from '@/constants/colors';
 
 export default function LoginScreen() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [loadingProvider, setLoadingProvider] = useState<'apple' | 'google' | null>(null);
-  const { loginWithApple, loginWithGoogle } = useAuthStore();
-
-  const handleAppleLogin = async () => {
+  const handleAppleSignIn = async () => {
     try {
-      setIsLoading(true);
-      setLoadingProvider('apple');
-
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
       });
-
-      if (credential.identityToken) {
-        await loginWithApple(credential.identityToken, credential.nonce ?? undefined);
-        router.replace('/(auth)/onboarding');
-      }
+      console.log('Apple credential:', credential);
+      router.replace('/(auth)/onboarding');
     } catch (error: any) {
-      if (error.code !== 'ERR_REQUEST_CANCELED') {
-        Alert.alert('Sign In Failed', 'Unable to sign in with Apple. Please try again.');
+      if (error.code === 'ERR_REQUEST_CANCELED') {
+        console.log('User canceled');
+      } else {
+        Alert.alert('Error', 'Apple Sign In failed');
         console.error('Apple Sign In Error:', error);
       }
-    } finally {
-      setIsLoading(false);
-      setLoadingProvider(null);
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      setIsLoading(true);
-      setLoadingProvider('google');
+  const handleGoogleSignIn = async () => {
+    Alert.alert('Coming Soon', 'Google Sign In will be available soon');
+  };
 
-      await loginWithGoogle();
-      router.replace('/(auth)/onboarding');
-    } catch (error: any) {
-      if (error.code !== 'ERR_REQUEST_CANCELED') {
-        Alert.alert('Sign In Failed', 'Unable to sign in with Google. Please try again.');
-        console.error('Google Sign In Error:', error);
-      }
-    } finally {
-      setIsLoading(false);
-      setLoadingProvider(null);
-    }
+  const handleSkipLogin = () => {
+    // Dev only - skip to main app
+    router.replace('/(main)');
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        {/* Logo Section */}
-        <View style={styles.logoSection}>
-          <View style={styles.logoPlaceholder}>
-            <Ionicons name="car" size={60} color={colors.primary} />
-            <View style={styles.maskOverlay}>
-              <Ionicons name="eye" size={24} color={colors.primaryDark} />
+        {/* Logo */}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../../assets/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+
+        {/* Title */}
+        <Text style={styles.title}>Park-IT</Text>
+        <Text style={styles.subtitle}>Your parking sidekick</Text>
+
+        {/* Features */}
+        <View style={styles.features}>
+          <View style={styles.featureRow}>
+            <View style={styles.featureIcon}>
+              <Ionicons name="notifications" size={20} color={colors.primary} />
             </View>
+            <Text style={styles.featureText}>Get alerts before your meter expires</Text>
           </View>
-          <Text style={styles.title}>Park-IT</Text>
-          <Text style={styles.subtitle}>Your parking sidekick</Text>
-        </View>
-
-        {/* Features Section */}
-        <View style={styles.featuresSection}>
-          <FeatureItem
-            icon="notifications"
-            text="Get alerts before your meter expires"
-          />
-          <FeatureItem
-            icon="shield-checkmark"
-            text="Avoid parking tickets with smart rules"
-          />
-          <FeatureItem
-            icon="time"
-            text="Know exactly when to move your car"
-          />
-        </View>
-
-        {/* Sign In Buttons */}
-        <View style={styles.buttonsSection}>
-          {Platform.OS === 'ios' && (
-            <TouchableOpacity
-              style={styles.appleButton}
-              onPress={handleAppleLogin}
-              disabled={isLoading}
-            >
-              {loadingProvider === 'apple' ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <>
-                  <Ionicons name="logo-apple" size={24} color="#FFFFFF" />
-                  <Text style={styles.appleButtonText}>Continue with Apple</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={handleGoogleLogin}
-            disabled={isLoading}
-          >
-            {loadingProvider === 'google' ? (
-              <ActivityIndicator color={colors.text.primary} />
-            ) : (
-              <>
-                <Ionicons name="logo-google" size={24} color="#DB4437" />
-                <Text style={styles.googleButtonText}>Continue with Google</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            By continuing, you agree to our{' '}
-            <Text style={styles.footerLink}>Terms of Service</Text>
-            {' '}and{' '}
-            <Text style={styles.footerLink}>Privacy Policy</Text>
-          </Text>
+          <View style={styles.featureRow}>
+            <View style={styles.featureIcon}>
+              <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+            </View>
+            <Text style={styles.featureText}>Avoid parking tickets with smart rules</Text>
+          </View>
+          <View style={styles.featureRow}>
+            <View style={styles.featureIcon}>
+              <Ionicons name="time" size={20} color={colors.primary} />
+            </View>
+            <Text style={styles.featureText}>Know exactly when to move your car</Text>
+          </View>
         </View>
       </View>
 
-      {/* Sidekick Studios Branding */}
-      <View style={styles.brandingSection}>
-        <Text style={styles.brandingText}>from</Text>
-        <Text style={styles.brandingName}>Sidekick Studios</Text>
+      {/* Auth Buttons */}
+      <View style={styles.authContainer}>
+        <TouchableOpacity style={styles.appleButton} onPress={handleAppleSignIn}>
+          <Ionicons name="logo-apple" size={24} color="#FFFFFF" />
+          <Text style={styles.appleButtonText}>Continue with Apple</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
+          <Text style={styles.googleG}>G</Text>
+          <Text style={styles.googleButtonText}>Continue with Google</Text>
+        </TouchableOpacity>
+
+        {/* Dev Skip Button */}
+        {__DEV__ && (
+          <TouchableOpacity style={styles.skipButton} onPress={handleSkipLogin}>
+            <Text style={styles.skipButtonText}>Skip (Dev Mode)</Text>
+          </TouchableOpacity>
+        )}
+
+        <Text style={styles.terms}>
+          By continuing, you agree to our{' '}
+          <Text style={styles.link}>Terms of Service</Text> and{' '}
+          <Text style={styles.link}>Privacy Policy</Text>
+        </Text>
+
+        <View style={styles.brandingContainer}>
+          <Text style={styles.brandingFrom}>from</Text>
+          <Text style={styles.brandingName}>Sidekick Studios</Text>
+        </View>
       </View>
     </SafeAreaView>
-  );
-}
-
-// Feature item component
-function FeatureItem({ icon, text }: { icon: string; text: string }) {
-  return (
-    <View style={styles.featureItem}>
-      <View style={styles.featureIcon}>
-        <Ionicons name={icon as any} size={20} color={colors.primary} />
-      </View>
-      <Text style={styles.featureText}>{text}</Text>
-    </View>
   );
 }
 
@@ -172,47 +116,36 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    justifyContent: 'center',
+    paddingTop: 40,
   },
-  logoSection: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  logoPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 30,
-    backgroundColor: colors.primaryLight,
-    justifyContent: 'center',
+  logoContainer: {
     alignItems: 'center',
     marginBottom: 16,
-    position: 'relative',
   },
-  maskOverlay: {
-    position: 'absolute',
-    top: 25,
-    backgroundColor: colors.primaryDark,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
+  logo: {
+    width: 120,
+    height: 120,
   },
   title: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: '700',
     color: colors.text.primary,
-    marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 18,
     color: colors.text.secondary,
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 32,
   },
-  featuresSection: {
-    marginBottom: 40,
+  features: {
+    gap: 16,
   },
-  featureItem: {
+  featureRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    gap: 12,
   },
   featureIcon: {
     width: 40,
@@ -221,15 +154,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
   },
   featureText: {
-    flex: 1,
     fontSize: 16,
     color: colors.text.primary,
+    flex: 1,
   },
-  buttonsSection: {
-    gap: 12,
+  authContainer: {
+    paddingHorizontal: 24,
+    paddingBottom: 32,
   },
   appleButton: {
     flexDirection: 'row',
@@ -239,6 +172,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     gap: 10,
+    marginBottom: 12,
   },
   appleButtonText: {
     color: '#FFFFFF',
@@ -252,40 +186,50 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     paddingVertical: 16,
     borderRadius: 12,
+    gap: 10,
     borderWidth: 1,
     borderColor: colors.border.light,
-    gap: 10,
+  },
+  googleG: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#EA4335',
   },
   googleButtonText: {
     color: colors.text.primary,
     fontSize: 17,
     fontWeight: '600',
   },
-  footer: {
-    marginTop: 24,
+  skipButton: {
     alignItems: 'center',
+    paddingVertical: 16,
+    marginTop: 8,
   },
-  footerText: {
+  skipButtonText: {
+    color: colors.text.muted,
+    fontSize: 14,
+  },
+  terms: {
     fontSize: 13,
     color: colors.text.muted,
     textAlign: 'center',
+    marginTop: 16,
     lineHeight: 20,
   },
-  footerLink: {
+  link: {
     color: colors.primary,
-    fontWeight: '500',
   },
-  brandingSection: {
+  brandingContainer: {
     alignItems: 'center',
-    paddingBottom: 24,
+    marginTop: 24,
   },
-  brandingText: {
+  brandingFrom: {
     fontSize: 12,
     color: colors.text.muted,
   },
   brandingName: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.primaryDark,
+    color: colors.text.primary,
   },
 });

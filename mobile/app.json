@@ -76,7 +76,9 @@
           "color": "#4A7FC1"
         }
       ],
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "expo-font",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true
