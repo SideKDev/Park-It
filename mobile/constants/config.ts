@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:8000/api/v1',
+  BASE_URL: 'https://unscrutinisingly-untranslated-evie.ngrok-free.dev/api/v1',
   TIMEOUT: 10000,
 };
 
