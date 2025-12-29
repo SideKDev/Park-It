@@ -63,34 +63,34 @@ export default function SessionScreen() {
     );
   };
 
-  const handlePayWithParkMobile = async () => {
+  const handlePayWithParkNYC = async () => {
     const zoneCode = currentSession.location.zoneCode;
     
     if (zoneCode) {
       Alert.alert(
-        'Opening ParkMobile',
+        'Opening ParkNYC',
         `Zone: ${zoneCode}\n\nAfter you pay, come back and tap "I Paid" so we can track it.`,
         [
           { text: 'Cancel', style: 'cancel' },
           {
-            text: 'Open ParkMobile',
+            text: 'Open ParkNYC',
             onPress: async () => {
               try {
-                const canOpen = await Linking.canOpenURL('parkmobile://');
+                const canOpen = await Linking.canOpenURL('parknyc://');
                 if (canOpen) {
-                  await Linking.openURL(`parkmobile://park?zoneId=${zoneCode}`);
+                  await Linking.openURL(`parknyc://park?zoneId=${zoneCode}`);
                 } else {
-                  await Linking.openURL('https://parkmobile.io');
+                  await Linking.openURL('https://apps.apple.com/app/parknyc/id1592160562');
                 }
               } catch (e) {
-                await Linking.openURL('https://parkmobile.io');
+                await Linking.openURL('https://apps.apple.com/app/parknyc/id1592160562');
               }
             },
           },
         ]
       );
     } else {
-      await Linking.openURL('https://parkmobile.io');
+      await Linking.openURL('https://apps.apple.com/app/parknyc/id1592160562');
     }
   };
 
@@ -274,10 +274,10 @@ export default function SessionScreen() {
                 <View style={styles.paymentActions}>
                   <TouchableOpacity
                     style={styles.paymentButton}
-                    onPress={handlePayWithParkMobile}
+                    onPress={handlePayWithParkNYC}
                   >
                     <Ionicons name="card" size={20} color="#FFFFFF" />
-                    <Text style={styles.paymentButtonText}>Pay with ParkMobile</Text>
+                    <Text style={styles.paymentButtonText}>Pay with ParkNYC</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.paidButton}
