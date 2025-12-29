@@ -7,17 +7,22 @@ import {
   ScrollView,
   Alert,
   Linking,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import MapView, { Marker } from 'react-native-maps';
+import * as Clipboard from 'expo-clipboard';
 import { useParkingStore } from '@/stores/parkingStore';
 import { StatusBadge } from '@/components/StatusBadge';
 import { colors, getStatusColor, getStatusBackground } from '@/constants/colors';
-import { PARKMOBILE_CONFIG } from '@/constants/config';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function SessionScreen() {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [copiedZone, setCopiedZone] = useState(false);
   
   const {
     currentSession,
@@ -27,7 +32,6 @@ export default function SessionScreen() {
     confirmPayment,
   } = useParkingStore();
 
-  // Update current time every minute for time remaining calc
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
@@ -61,6 +65,32 @@ export default function SessionScreen() {
         },
       ]
     );
+  };
+
+  const handleMovedCar = () => {
+    Alert.alert(
+      'Moved Your Car?',
+      'This will end your current session. You can start a new one at your new location.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Yes, End Session',
+          onPress: async () => {
+            await endSession();
+            router.replace('/(main)/park');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleCopyZoneCode = async () => {
+    const zoneCode = currentSession.location.zoneCode;
+    if (zoneCode) {
+      await Clipboard.setStringAsync(zoneCode);
+      setCopiedZone(true);
+      setTimeout(() => setCopiedZone(false), 2000);
+    }
   };
 
   const handlePayWithParkNYC = async () => {
@@ -100,9 +130,9 @@ export default function SessionScreen() {
       'How long did you pay for?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: '30 min', onPress: () => confirmPayment('parkmobile', 30) },
-        { text: '1 hour', onPress: () => confirmPayment('parkmobile', 60) },
-        { text: '2 hours', onPress: () => confirmPayment('parkmobile', 120) },
+        { text: '30 min', onPress: () => confirmPayment('parknyc', 30) },
+        { text: '1 hour', onPress: () => confirmPayment('parknyc', 60) },
+        { text: '2 hours', onPress: () => confirmPayment('parknyc', 120) },
       ]
     );
   };
@@ -113,10 +143,8 @@ export default function SessionScreen() {
   const formatTime = (dateString: string | null) => {
     if (!dateString) return '--:--';
     
-    // Parse the date - handle both ISO strings and timestamps
     let date: Date;
     if (typeof dateString === 'string') {
-      // If it's a UTC string without timezone, append Z
       if (!dateString.includes('Z') && !dateString.includes('+') && !dateString.includes('-', 10)) {
         date = new Date(dateString + 'Z');
       } else {
@@ -126,7 +154,6 @@ export default function SessionScreen() {
       date = new Date(dateString);
     }
     
-    // Format in local timezone
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
@@ -179,6 +206,11 @@ export default function SessionScreen() {
     return `${minutes}m parked`;
   };
 
+  const parkedLocation = {
+    latitude: currentSession.location.latitude,
+    longitude: currentSession.location.longitude,
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
@@ -205,6 +237,31 @@ export default function SessionScreen() {
           )}
         </View>
 
+        {/* Map showing parked location */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your Car</Text>
+          <View style={styles.mapContainer}>
+            <MapView
+              style={styles.map}
+              initialRegion={{
+                ...parkedLocation,
+                latitudeDelta: 0.003,
+                longitudeDelta: 0.003,
+              }}
+              scrollEnabled={false}
+              zoomEnabled={false}
+              pitchEnabled={false}
+              rotateEnabled={false}
+            >
+              <Marker coordinate={parkedLocation}>
+                <View style={styles.markerContainer}>
+                  <Ionicons name="car" size={20} color="#FFFFFF" />
+                </View>
+              </Marker>
+            </MapView>
+          </View>
+        </View>
+
         {/* Location Info */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Location</Text>
@@ -217,12 +274,24 @@ export default function SessionScreen() {
               </Text>
             </View>
             {currentSession.location.zoneCode && (
-              <View style={styles.infoRow}>
-                <Ionicons name="grid" size={20} color={colors.text.secondary} />
-                <Text style={styles.infoText}>
-                  Zone: {currentSession.location.zoneCode}
-                </Text>
-              </View>
+              <TouchableOpacity style={styles.zoneRow} onPress={handleCopyZoneCode}>
+                <View style={styles.infoRow}>
+                  <Ionicons name="grid" size={20} color={colors.text.secondary} />
+                  <Text style={styles.infoText}>
+                    Zone: {currentSession.location.zoneCode}
+                  </Text>
+                  <View style={styles.copyButton}>
+                    <Ionicons 
+                      name={copiedZone ? "checkmark" : "copy-outline"} 
+                      size={18} 
+                      color={copiedZone ? colors.status.green : colors.primary} 
+                    />
+                    <Text style={[styles.copyText, copiedZone && styles.copiedText]}>
+                      {copiedZone ? 'Copied!' : 'Copy'}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
             )}
           </View>
         </View>
@@ -310,7 +379,7 @@ export default function SessionScreen() {
         <View style={styles.actionsSection}>
           <TouchableOpacity
             style={styles.moveButton}
-            onPress={() => router.push('/(main)/moved')}
+            onPress={handleMovedCar}
           >
             <Ionicons name="car" size={20} color={colors.primary} />
             <Text style={styles.moveButtonText}>I Moved My Car</Text>
@@ -390,6 +459,27 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 8,
   },
+  mapContainer: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    height: 150,
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  markerContainer: {
+    backgroundColor: colors.primary,
+    borderRadius: 20,
+    padding: 8,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
   infoCard: {
     backgroundColor: colors.background.card,
     borderRadius: 12,
@@ -401,10 +491,32 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 8,
   },
+  zoneRow: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border.light,
+    marginTop: 4,
+  },
   infoText: {
     flex: 1,
     fontSize: 15,
     color: colors.text.primary,
+  },
+  copyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.primaryLight,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  copyText: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '500',
+  },
+  copiedText: {
+    color: colors.status.green,
   },
   paymentActions: {
     marginTop: 12,
